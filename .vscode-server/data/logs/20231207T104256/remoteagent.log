@@ -1,0 +1,19 @@
+2023-12-07 10:42:56.817 [info] 
+
+
+
+
+2023-12-07 10:42:56.825 [info] Extension host agent started.
+2023-12-07 10:42:56.854 [debug] No uninstalled extensions found.
+2023-12-07 10:42:57.227 [info] [127.0.0.1][034ae239][ManagementConnection] New connection established.
+2023-12-07 10:42:57.438 [info] Log level changed to info
+2023-12-07 10:42:57.598 [info] [127.0.0.1][87bf490b][ExtensionHostConnection] New connection established.
+2023-12-07 10:42:57.601 [info] [127.0.0.1][87bf490b][ExtensionHostConnection] <234> Launched Extension Host Process.
+2023-12-07 10:42:58.718 [error] [File Watcher (parcel)] Inotify limit reached (ENOSPC) (path: /root)
+2023-12-07 19:55:00.310 [info] [127.0.0.1][034ae239][ManagementConnection] The client has reconnected.
+2023-12-07 19:55:00.569 [info] [127.0.0.1][87bf490b][ExtensionHostConnection] The client has reconnected.
+2023-12-07 19:56:07.889 [info] [127.0.0.1][034ae239][ManagementConnection] The client has reconnected.
+2023-12-07 19:56:08.178 [info] [127.0.0.1][87bf490b][ExtensionHostConnection] The client has reconnected.
+2023-12-07 19:57:15.266 [info] [127.0.0.1][034ae239][ManagementConnection] The client has reconnected.
+2023-12-07 19:57:15.515 [info] [127.0.0.1][87bf490b][ExtensionHostConnection] The client has reconnected.
+2023-12-08 00:33:49.245 [info] [127.0.0.1][87bf490b][ExtensionHostConnection] <234> Extension Host Process exited with code: 0, signal: null.

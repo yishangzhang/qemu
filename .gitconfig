@@ -1,0 +1,10 @@
+[user]
+	name = yishangzhang
+	email = Yishang.Zhang@linux.alibaba.com
+[sendemail]
+ 	smtpencryption = ssl
+	smtpserver = smtp.aliyun.com
+	smtpserverport = 465
+	smtpuser = Yishang.Zhang@linux.alibaba.com
+[credential]
+	helper = "!f() { /root/.vscode-server/bin/1a5daa3a0231a0fbba4f14db7ec463cf99d7768e/node /tmp/vscode-remote-containers-6bc85ef6-3593-4061-8079-d9cb2769c2f9.js git-credential-helper $*; }; f"

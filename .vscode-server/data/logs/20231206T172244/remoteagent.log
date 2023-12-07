@@ -1,0 +1,35 @@
+2023-12-06 17:22:44.652 [info] 
+
+
+
+
+2023-12-06 17:22:44.652 [info] Extension host agent started.
+2023-12-06 17:22:44.652 [debug] No uninstalled extensions found.
+2023-12-06 17:22:44.653 [info] Started initializing default profile extensions in extensions installation folder. file:///root/.vscode-server/extensions
+2023-12-06 17:22:44.656 [debug] ComputeTargetPlatform: linux-x64
+2023-12-06 17:22:44.659 [info] Completed initializing default profile extensions in extensions installation folder. file:///root/.vscode-server/extensions
+2023-12-06 17:22:45.172 [info] [127.0.0.1][2b7437d0][ManagementConnection] New connection established.
+2023-12-06 17:22:45.349 [info] Log level changed to info
+2023-12-06 17:22:45.500 [info] [127.0.0.1][fbcadd54][ExtensionHostConnection] New connection established.
+2023-12-06 17:22:45.504 [info] [127.0.0.1][fbcadd54][ExtensionHostConnection] <25492> Launched Extension Host Process.
+2023-12-06 17:30:40.530 [info] [127.0.0.1][2b7437d0][ManagementConnection] The client has disconnected gracefully, so the connection will be disposed.
+2023-12-06 17:30:40.550 [info] [127.0.0.1][fbcadd54][ExtensionHostConnection] <25492> Extension Host Process exited with code: 0, signal: null.
+2023-12-06 17:30:50.558 [info] [127.0.0.1][b5dc8e80][ManagementConnection] New connection established.
+2023-12-06 17:30:50.837 [info] [127.0.0.1][369ab3f3][ExtensionHostConnection] New connection established.
+2023-12-06 17:30:50.842 [info] [127.0.0.1][369ab3f3][ExtensionHostConnection] <29930> Launched Extension Host Process.
+2023-12-06 17:30:52.110 [error] [File Watcher (parcel)] Inotify limit reached (ENOSPC) (path: /root)
+2023-12-06 21:38:01.749 [info] [127.0.0.1][9154f45b][ManagementConnection] New connection established.
+2023-12-06 21:38:01.968 [info] [127.0.0.1][7e7bbfd7][ExtensionHostConnection] New connection established.
+2023-12-06 21:38:01.971 [info] [127.0.0.1][7e7bbfd7][ExtensionHostConnection] <202935> Launched Extension Host Process.
+2023-12-06 21:38:02.997 [error] [File Watcher (parcel)] Inotify limit reached (ENOSPC) (path: /root)
+2023-12-06 21:43:01.933 [info] [127.0.0.1][369ab3f3][ExtensionHostConnection] <29930> Extension Host Process exited with code: 0, signal: null.
+2023-12-06 22:32:26.655 [info] Getting Manifest... gerrnperl.outline-map
+2023-12-06 22:32:43.965 [info] Installing extension: gerrnperl.outline-map
+2023-12-06 22:32:51.691 [warning] Extension signature verification failed with error 'ENOENT': gerrnperl.outline-map
+2023-12-06 22:32:51.740 [info] Extracted extension to file:///root/.vscode-server/extensions/gerrnperl.outline-map-1.3.2: gerrnperl.outline-map
+2023-12-06 22:32:51.744 [info] Renamed to /root/.vscode-server/extensions/gerrnperl.outline-map-1.3.2
+2023-12-06 22:32:51.746 [info] Extracting extension completed. gerrnperl.outline-map
+2023-12-06 22:32:51.749 [info] Extension installed successfully: gerrnperl.outline-map
+2023-12-07 01:27:15.540 [info] [127.0.0.1][7e7bbfd7][ExtensionHostConnection] The client has reconnected.
+2023-12-07 01:27:15.667 [info] [127.0.0.1][9154f45b][ManagementConnection] The client has reconnected.
+2023-12-07 04:45:15.727 [info] [127.0.0.1][7e7bbfd7][ExtensionHostConnection] <202935> Extension Host Process exited with code: 0, signal: null.
