@@ -21,6 +21,7 @@
 #include <sys/prctl.h>
 #include <seccomp.h>
 #include "sysemu/seccomp.h"
+#include <linux/sched.h>
 #include <linux/seccomp.h>
 
 /* For some architectures (notably ARM) cacheflush is not supported until

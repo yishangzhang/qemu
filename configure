@@ -275,7 +275,7 @@ EXTRA_CXXFLAGS=""
 EXTRA_OBJCFLAGS=""
 EXTRA_LDFLAGS=""
 
-debug_tcg="no"
+debug_tcg="yes"
 sanitizers="no"
 tsan="no"
 fortify_source="yes"

@@ -48,6 +48,7 @@ struct TPMIfClass {
 #define TYPE_TPM_TIS_SYSBUS         "tpm-tis-device"
 #define TYPE_TPM_CRB                "tpm-crb"
 #define TYPE_TPM_SPAPR              "tpm-spapr"
+#define TYPE_TPM_VIRTIO              "tpm-virtio"
 
 #define TPM_IS_TIS_ISA(chr)                         \
     object_dynamic_cast(OBJECT(chr), TYPE_TPM_TIS_ISA)
@@ -57,12 +58,14 @@ struct TPMIfClass {
     object_dynamic_cast(OBJECT(chr), TYPE_TPM_CRB)
 #define TPM_IS_SPAPR(chr)                           \
     object_dynamic_cast(OBJECT(chr), TYPE_TPM_SPAPR)
+#define TPM_IS_VIRTIO(chr)                           \
+    object_dynamic_cast(OBJECT(chr), TYPE_TPM_VIRTIO)
 
 /* returns NULL unless there is exactly one TPM device */
 static inline TPMIf *tpm_find(void)
 {
     Object *obj = object_resolve_path_type("", TYPE_TPM_IF, NULL);
-
+    
     return TPM_IF(obj);
 }
 

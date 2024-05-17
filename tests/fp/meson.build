@@ -640,6 +640,7 @@ executable(
   dependencies: [qemuutil],
   include_directories: [sfinc, include_directories(tfdir)],
   c_args: fpcflags,
+  build_by_default: false,
 )
 
 fptestlog2 = executable(

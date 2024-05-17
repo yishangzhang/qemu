@@ -22,6 +22,7 @@ void rng_backend_request_entropy(RngBackend *s, size_t size,
 {
     RngBackendClass *k = RNG_BACKEND_GET_CLASS(s);
     RngRequest *req;
+    printf("receive rng request    -=== === === ===== ====== ====== ====== ======\n");
 
     if (k->request_entropy) {
         req = g_malloc(sizeof(*req));
