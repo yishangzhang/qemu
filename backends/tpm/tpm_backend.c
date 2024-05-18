@@ -39,8 +39,9 @@ static int tpm_backend_worker_thread(gpointer data)
     TPMBackend *s = TPM_BACKEND(data);
     TPMBackendClass *k = TPM_BACKEND_GET_CLASS(s);
     Error *err = NULL;
-
+    printf("\nQEMU virtio_tpm  --- Response size before send: %d \n", s->cmd->out_len);
     k->handle_request(s, s->cmd, &err);
+    printf("\nQEMU virtio_tpm  --- Response size: %d \n", s->cmd->out_len);
     if (err) {
         error_report_err(err);
         return -1;

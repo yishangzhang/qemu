@@ -20,6 +20,7 @@
 
 #include "sysemu/tpm_util.h"
 #include "sysemu/runstate.h"
+#include "sysemu/tpm.h"
 #include "qom/object_interfaces.h"
 #include "trace.h"
 
@@ -58,6 +59,23 @@ extern const PropertyInfo qdev_prop_tpm;
 //     virtqueue_get_avail_bytes(vq, &in, &out, quota, 0);
 //     return in;
 // }
+
+
+static int tpm_backend_worker_thread(gpointer data)
+{
+    TPMBackend *s = TPM_BACKEND(data);
+    TPMBackendClass *k = TPM_BACKEND_GET_CLASS(s);
+    Error *err = NULL;
+
+    k->handle_request(s, s->cmd, &err);
+    if (err) {
+        error_report_err(err);
+        return -1;
+    }
+
+    return 0;
+}
+
 
 static enum TPMVersion tpm_virtio_get_version(TPMIf *ti)
 {
@@ -153,7 +171,11 @@ static void handle_command(VirtIODevice *vdev, VirtQueue *vq, VirtQueueElement *
         .out_len = response_len,
         .selftest_done = true
     };
-    tpm_backend_deliver_request(vtpm->tpm, cmd);
+    printf("\nQEMU virtio_tpm Response address: %p \n", cmd->out);
+    //tpm_backend_deliver_request(vtpm->tpm, cmd);
+    vtpm->tpm->cmd = cmd;
+    tpm_backend_worker_thread(vtpm->tpm);
+
     
     printf("\nReceive one message: %u \n", cmd->out_len);
     for (size_t i = 0; i < cmd->out_len; ++i) {
