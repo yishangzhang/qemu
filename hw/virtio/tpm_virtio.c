@@ -31,15 +31,6 @@ extern const PropertyInfo qdev_prop_tpm;
 #define DEFINE_PROP_TPMBE(_n, _s, _f)                     \
     DEFINE_PROP(_n, _s, _f, qdev_prop_tpm, TPMBackend *)
 
-// struct TPMStateSysBus {
-//     /*< private >*/
-//     VirtIODevice parent_obj;
-
-//     /*< public >*/
-//     TPMState state; /* not a QOM object */
-// };
-
-// OBJECT_DECLARE_SIMPLE_TYPE(TPMStateISA, TPM_TIS_ISA)
 
 // static bool is_guest_ready(VirtIORNG *vrng)
 // {
@@ -66,8 +57,9 @@ static int tpm_backend_worker_thread(gpointer data)
     TPMBackend *s = TPM_BACKEND(data);
     TPMBackendClass *k = TPM_BACKEND_GET_CLASS(s);
     Error *err = NULL;
-
+    //printf("virtio_tpm before send %d",s->cmd->out_len);
     k->handle_request(s, s->cmd, &err);
+    //printf("virtio_tpm after send %d",s->cmd->out_len);
     if (err) {
         error_report_err(err);
         return -1;
@@ -79,9 +71,9 @@ static int tpm_backend_worker_thread(gpointer data)
 
 static enum TPMVersion tpm_virtio_get_version(TPMIf *ti)
 {
-    VirtIOTPM *vtpm = VirtIO_TPM(ti);
+    //VirtIOTPM *vtpm = VirtIO_TPM(ti);
 
-    return tpm_backend_get_tpm_version(vtpm->tpm);
+    return TPM_VERSION_2_0;
 }
 
 
@@ -150,7 +142,7 @@ static void tpm_virtio_set_status(VirtIODevice *vdev, uint8_t status)
 static void handle_command(VirtIODevice *vdev, VirtQueue *vq, VirtQueueElement *elem){
     VirtIOTPM *vtpm = TPM_VIRTIO(vdev);
 
-    printf("out_buffer len is %d  and in_buffer len is %d  \n",elem->out_num,elem->in_num);
+    //printf("out_buffer len is %d  and in_buffer len is %d  \n",elem->out_num,elem->in_num);
     //assert(elem->in_num == 1 && elem->out_num == 1);
     uint32_t buf_len = elem->out_sg[0].iov_len;
     uint8_t *buf = elem->out_sg[0].iov_base;
@@ -171,33 +163,22 @@ static void handle_command(VirtIODevice *vdev, VirtQueue *vq, VirtQueueElement *
         .out_len = response_len,
         .selftest_done = true
     };
-    printf("\nQEMU virtio_tpm Response address: %p \n", cmd->out);
+    //printf("\nQEMU virtio_tpm Response address: %p \n", cmd->out);
     //tpm_backend_deliver_request(vtpm->tpm, cmd);
     vtpm->tpm->cmd = cmd;
     tpm_backend_worker_thread(vtpm->tpm);
 
     
-    printf("\nReceive one message: %u \n", cmd->out_len);
-    for (size_t i = 0; i < cmd->out_len; ++i) {
-        printf("%02x", cmd->out[i]);
-    }
-    printf("\n");
+    //printf("\nReceive one message: %u \n", cmd->out_len);
+    // for (size_t i = 0; i < cmd->out_len; ++i) {
+    //     printf("%02x", cmd->out[i]);
+    // }
+    //printf("\n");
+    //printf("\nQEMU : virtio_tpm: guest len is %lu and buffer len is %d\n", elem->in_sg[0].iov_len ,  cmd->out_len);
+    assert( cmd->out_len <= elem->in_sg[0].iov_len);
 
-
-
-
-
-
-    //char msg[] = "welcome\n"; 
-
-    uint8_t numss[] = {0x81,0x82,0x83,0x84,0x85,0x86};
-    size_t len = sizeof(numss);
-
-    printf("\nQEMU : virtio_tpm: guest len is %lu and buffer len is %lu\n", elem->in_sg[0].iov_len , len);
-    assert(len < elem->in_sg[0].iov_len);
-
-    memcpy(elem->in_sg->iov_base, numss,len);
-    virtqueue_push(vq, elem,len);
+    memcpy(elem->in_sg->iov_base,  cmd->out, cmd->out_len);
+    virtqueue_push(vq,  elem, cmd->out_len);
     virtio_notify(VIRTIO_DEVICE(vdev),vq);
 }
 static void tpm_virtio_handle(VirtIODevice *vdev, VirtQueue *vq)
@@ -213,7 +194,7 @@ static void tpm_virtio_handle(VirtIODevice *vdev, VirtQueue *vq)
         return;
     }
 
-    printf("qemu:virtio_tpm ready  pop elem\n");
+    //printf("qemu:virtio_tpm ready  pop elem\n");
 
     elem = virtqueue_pop(vq,sizeof(VirtQueueElement));
     while (elem)
@@ -263,9 +244,10 @@ static void tpm_virtio_device_realize(DeviceState *dev, Error **errp)
     VirtIODevice *vdev = VIRTIO_DEVICE(dev);
     VirtIOTPM *vtpm = TPM_VIRTIO(dev);
 
-    virtio_init(vdev, VIRTIO_ID_TPM, sizeof(VirtIOTPMConfig));
+    virtio_init(vdev, VIRTIO_ID_TPM, sizeof(TPMState));
 
-    vtpm->conf.tpm = vtpm->tpm;
+    //vtpm->conf.tpm = vtpm->tpm;
+    vtpm->state.be_driver = vtpm->tpm;
     vtpm->request_vq = virtio_add_queue(vdev, 64, tpm_virtio_handle);
     //vtpm->response_vq = virtio_add_queue(vdev, 64, tpm_virtio_idle);
 
@@ -303,6 +285,54 @@ static void tpm_virtio_device_unrealize(DeviceState *dev)
 // };
 
 
+static void tpm_virtio_reset(DeviceState *dev)
+{
+    VirtIODevice *vdev = VIRTIO_DEVICE(dev);
+    VirtIOTPM *vtpm = TPM_VIRTIO(vdev);
+    TPMState *s = &vtpm->state;
+    //int c;
+
+    s->be_tpm_version = tpm_backend_get_tpm_version(s->be_driver);
+    s->be_buffer_size = MIN(tpm_backend_get_buffer_size(s->be_driver),
+                            TPM_TIS_BUFFER_MAX);
+
+    if (s->ppi_enabled) {
+        tpm_ppi_reset(&s->ppi);
+    }
+    tpm_backend_reset(s->be_driver);
+
+    s->active_locty = TPM_TIS_NO_LOCALITY;
+    s->next_locty = TPM_TIS_NO_LOCALITY;
+    s->aborting_locty = TPM_TIS_NO_LOCALITY;
+
+    // for (c = 0; c < TPM_TIS_NUM_LOCALITIES; c++) {
+    //     s->loc[c].access = TPM_TIS_ACCESS_TPM_REG_VALID_STS;
+    //     switch (s->be_tpm_version) {
+    //     case TPM_VERSION_UNSPEC:
+    //         break;
+    //     case TPM_VERSION_1_2:
+    //         s->loc[c].sts = TPM_TIS_STS_TPM_FAMILY1_2;
+    //         s->loc[c].iface_id = TPM_TIS_IFACE_ID_SUPPORTED_FLAGS1_3;
+    //         break;
+    //     case TPM_VERSION_2_0:
+    //         s->loc[c].sts = TPM_TIS_STS_TPM_FAMILY2_0;
+    //         s->loc[c].iface_id = TPM_TIS_IFACE_ID_SUPPORTED_FLAGS2_0;
+    //         break;
+    //     }
+    //     s->loc[c].inte = TPM_TIS_INT_POLARITY_LOW_LEVEL;
+    //     s->loc[c].ints = 0;
+    //     s->loc[c].state = TPM_TIS_STATE_IDLE;
+
+    //     s->rw_offset = 0;
+    // }
+
+    if (tpm_backend_startup_tpm(s->be_driver, s->be_buffer_size) < 0) {
+        exit(1);
+    }
+
+    
+}
+
 static Property tpm_virtio_properties[] = {
     DEFINE_PROP_TPMBE("tpmdev", VirtIOTPM, tpm),
     DEFINE_PROP_BOOL("ppi", VirtIOTPM, ppi_enabled, false),
@@ -327,6 +357,8 @@ static void tpm_virtio_class_init(ObjectClass *klass, void *data)
     tc->model = TPM_MODEL_TPM_VIRTIO;
     tc->get_version = tpm_virtio_get_version;
     tc->request_completed = tpm_virtio_request_completed;
+
+    dc->reset = tpm_virtio_reset;
 }
 
 static const TypeInfo tpm_virtio_info = {
