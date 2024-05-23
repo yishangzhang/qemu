@@ -45,7 +45,7 @@
 #include "chardev/char-fe.h"
 #include "trace.h"
 #include "qom/object.h"
-
+#include "chardev/char-socket.h"
 #define TYPE_TPM_EMULATOR "tpm-emulator"
 OBJECT_DECLARE_SIMPLE_TYPE(TPMEmulator, TPM_EMULATOR)
 
@@ -70,6 +70,7 @@ struct TPMEmulator {
 
     TPMEmulatorOptions *options;
     CharBackend ctrl_chr;
+    CharBackend data_chr;
     QIOChannel *data_ioc;
     TPMVersion tpm_version;
     ptm_cap caps; /* capabilities of the TPM */
@@ -125,6 +126,7 @@ static const char *tpm_emulator_strerror(uint32_t tpm_result)
 static int tpm_emulator_ctrlcmd(TPMEmulator *tpm, unsigned long cmd, void *msg,
                                 size_t msg_len_in, size_t msg_len_out)
 {
+   
     CharBackend *dev = &tpm->ctrl_chr;
     uint32_t cmd_no = cpu_to_be32(cmd);
     ssize_t n = sizeof(uint32_t) + msg_len_in;
@@ -134,7 +136,7 @@ static int tpm_emulator_ctrlcmd(TPMEmulator *tpm, unsigned long cmd, void *msg,
         buf = g_alloca(n);
         memcpy(buf, &cmd_no, sizeof(cmd_no));
         memcpy(buf + sizeof(cmd_no), msg, msg_len_in);
-
+        
         n = qemu_chr_fe_write_all(dev, buf, n);
         if (n <= 0) {
             return -1;
@@ -159,6 +161,7 @@ static int tpm_emulator_unix_tx_bufs(TPMEmulator *tpm_emu,
 {
     ssize_t ret;
     bool is_selftest = false;
+    uint32_t len_recvl;
 
     if (selftest_done) {
         *selftest_done = false;
@@ -171,14 +174,14 @@ static int tpm_emulator_unix_tx_bufs(TPMEmulator *tpm_emu,
     }
 
     ret = qio_channel_read_all(tpm_emu->data_ioc, (char *)out,
-              sizeof(struct tpm_resp_hdr), errp);
+              sizeof(uint32_t), errp);
     if (ret != 0) {
         return -1;
     }
-
+    len_recvl = *(uint32_t *)out;
     ret = qio_channel_read_all(tpm_emu->data_ioc,
-              (char *)out + sizeof(struct tpm_resp_hdr),
-              tpm_cmd_get_size(out) - sizeof(struct tpm_resp_hdr), errp);
+              (char *)out +sizeof(uint32_t) ,
+              len_recvl, errp);
     if (ret != 0) {
         return -1;
     }
@@ -589,7 +592,8 @@ static int tpm_emulator_handle_device_opts(TPMEmulator *tpm_emu, QemuOpts *opts)
     Error *err = NULL;
     Chardev *dev;
 
-    value = qemu_opt_get(opts, "chardev");
+    //value = qemu_opt_get(opts, "chardev");
+    value = "chrtpm";
     if (!value) {
         error_report("tpm-emulator: parameter 'chardev' is missing");
         goto err;
@@ -610,9 +614,35 @@ static int tpm_emulator_handle_device_opts(TPMEmulator *tpm_emu, QemuOpts *opts)
 
     tpm_emu->options->chardev = g_strdup(value);
 
-    if (tpm_emulator_prepare_data_fd(tpm_emu) < 0) {
-        goto err;
-    }
+    value = "chardatatpm";
+        if(value) {
+        
+        dev = qemu_chr_find(value);
+        if (!dev) {
+            error_report("tpm-emulator: tpm datachardev '%s' not found", value);
+            goto err;
+        }
+
+        if (!qemu_chr_fe_init(&tpm_emu->data_chr, dev, &err)) {
+            error_prepend(&err, "tpm-emulator: No valid chardev (datachardev) found at '%s':",
+                        value);
+            error_report_err(err);
+            goto err;
+        }
+
+        tpm_emu->options->datachardev = g_strdup(value);
+
+        Chardev *data_dev = tpm_emu->data_chr.chr;
+        SocketChardev *s = SOCKET_CHARDEV(data_dev);
+
+
+
+
+        tpm_emu->data_ioc = s->ioc;
+
+    } else if (tpm_emulator_prepare_data_fd(tpm_emu) < 0) {
+         goto err;
+     }
 
     /* FIXME: tpm_util_test_tpmdev() accepts only on socket fd, as it also used
      * by passthrough driver, which not yet using GIOChannel.

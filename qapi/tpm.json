@@ -96,7 +96,7 @@
 #
 # Since: 2.11
 ##
-{ 'struct': 'TPMEmulatorOptions', 'data': { 'chardev' : 'str' },
+{ 'struct': 'TPMEmulatorOptions', 'data': { 'chardev' : 'str' , 'datachardev' : 'str'},
   'if': 'CONFIG_TPM' }
 
 ##

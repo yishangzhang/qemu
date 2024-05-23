@@ -3676,7 +3676,7 @@ DEF("tpmdev", HAS_ARG, QEMU_OPTION_tpmdev, \
     "                use path to provide path to a character device; default is /dev/tpm0\n"
     "                use cancel-path to provide path to TPM's cancel sysfs entry; if\n"
     "                not provided it will be searched for in /sys/class/misc/tpm?/device\n"
-    "-tpmdev emulator,id=id,chardev=dev\n"
+    "-tpmdev emulator,id=id,chardev=dev[,datachardev=datadev]\n"
     "                configure the TPM device using chardev backend\n",
     QEMU_ARCH_ALL)
 SRST
@@ -3729,7 +3729,7 @@ The available backends are:
     Note that the ``-tpmdev`` id is ``tpm0`` and is referenced by
     ``tpmdev=tpm0`` in the device option.
 
-``-tpmdev emulator,id=id,chardev=dev``
+``-tpmdev emulator,id=id,chardev=dev[,datachardev=datadev]``
     (Linux-host only) Enable access to a TPM emulator using Unix domain
     socket based chardev backend.
 

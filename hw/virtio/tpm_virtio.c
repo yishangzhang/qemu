@@ -26,6 +26,8 @@
 
 // hw/tpm/tpm_prop.h 无法 include
 
+#define TPM_RESPONSE_LEN 2048
+
 extern const PropertyInfo qdev_prop_tpm;
 
 #define DEFINE_PROP_TPMBE(_n, _s, _f)                     \
@@ -141,6 +143,7 @@ static void tpm_virtio_set_status(VirtIODevice *vdev, uint8_t status)
 
 static void handle_command(VirtIODevice *vdev, VirtQueue *vq, VirtQueueElement *elem){
     VirtIOTPM *vtpm = TPM_VIRTIO(vdev);
+    uint32_t *out_len_recv;
 
     //printf("out_buffer len is %d  and in_buffer len is %d  \n",elem->out_num,elem->in_num);
     //assert(elem->in_num == 1 && elem->out_num == 1);
@@ -152,8 +155,8 @@ static void handle_command(VirtIODevice *vdev, VirtQueue *vq, VirtQueueElement *
     
     //const uint8_t *out = buf;
     //uint32_t in_len = out_len;
-    uint8_t *response = g_malloc(512*sizeof(uint8_t));
-    uint32_t response_len = 512;
+    uint8_t *response = g_malloc(TPM_RESPONSE_LEN*sizeof(uint8_t));
+    uint32_t response_len = TPM_RESPONSE_LEN;
     //bool selftest_done =  true;
     struct TPMBackendCmd *cmd = g_malloc(sizeof(TPMBackendCmd));
     *cmd = (TPMBackendCmd){
@@ -165,11 +168,17 @@ static void handle_command(VirtIODevice *vdev, VirtQueue *vq, VirtQueueElement *
     };
     //printf("\nQEMU virtio_tpm Response address: %p \n", cmd->out);
     //tpm_backend_deliver_request(vtpm->tpm, cmd);
+
+    // printf("\nReceive one message  from host : %u \n", cmd->in_len);
+    // for (size_t i = 0; i < cmd->in_len; ++i) {
+    //     printf("%02x", cmd->in[i]);
+    // }
     vtpm->tpm->cmd = cmd;
     tpm_backend_worker_thread(vtpm->tpm);
 
-    
-    //printf("\nReceive one message: %u \n", cmd->out_len);
+    out_len_recv = (uint32_t *)cmd->out;
+    cmd->out_len = *out_len_recv;
+    // printf("\nReceive one message  from swtpm : %u \n", cmd->out_len);
     // for (size_t i = 0; i < cmd->out_len; ++i) {
     //     printf("%02x", cmd->out[i]);
     // }
@@ -177,7 +186,7 @@ static void handle_command(VirtIODevice *vdev, VirtQueue *vq, VirtQueueElement *
     //printf("\nQEMU : virtio_tpm: guest len is %lu and buffer len is %d\n", elem->in_sg[0].iov_len ,  cmd->out_len);
     assert( cmd->out_len <= elem->in_sg[0].iov_len);
 
-    memcpy(elem->in_sg->iov_base,  cmd->out, cmd->out_len);
+    memcpy(elem->in_sg->iov_base,  cmd->out+4, cmd->out_len);
     virtqueue_push(vq,  elem, cmd->out_len);
     virtio_notify(VIRTIO_DEVICE(vdev),vq);
 }
